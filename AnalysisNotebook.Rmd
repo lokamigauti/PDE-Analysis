@@ -1,0 +1,65 @@
+---
+title: "Analysis Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(viridis)
+library(hrbrthemes)
+database <- read_csv("database.csv")
+summary(database)
+```
+
+```{r}
+database %>%
+  select(Year,'10_Oil','10_NG','10_CO','10_U','10_HE','10_WC','10_SC','10_Others') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
+  mutate(Source = str_sub(Source,4)) %>%
+  ggplot(aes(x = Year))+
+  geom_area(aes(y = Investment, fill = Source), col = "white", alpha=0.6)+
+  scale_fill_grey()+
+  ggtitle("Brazilian Energy Investment", subtitle = "10 years perspective")+
+  ylab("Investment (perc)")+
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank())+
+  scale_x_continuous(breaks = seq(2009,2019,1))
+database %>%
+  select(Year,'10_Oil','10_NG','10_CO','10_U','10_HE','10_WC','10_SC','10_Others') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
+  mutate(Source = str_sub(Source,4)) %>%
+  ggplot(aes(x = Year))+
+  geom_line(aes(y = Investment, group = Source))+
+  geom_point(aes(y = Investment, group = Source, shape = Source))+
+  ggtitle("Brazilian Energy Investment", subtitle = "10 years perspective")+
+  ylab("Investment (perc)")+
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank())+
+  scale_x_continuous(breaks = seq(2009,2019,1))
+
+database %>%
+  select(Year,'10_NRS','10_RS') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
+  mutate(Source = str_sub(Source,4)) %>%
+  ggplot(aes(x = Year))+
+  geom_area(aes(y = Investment, fill = Source), col = "white", alpha=0.6)+
+  scale_fill_grey()+
+  ggtitle("Brazilian Energy Investment", subtitle = "10 years perspective")+
+  ylab("Investment (perc)")+
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank())+
+  scale_x_continuous(breaks = seq(2009,2019,1))
+database %>%
+  select(Year,'10_NRS','10_RS') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
+  mutate(Source = str_sub(Source,4)) %>%
+  ggplot(aes(x = Year))+
+  geom_line(aes(y = Investment, group = Source, col = Source))+
+  scale_color_grey()+
+  ggtitle("Brazilian Energy Investment", subtitle = "10 years perspective")+
+  ylab("Investment (perc)")+
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank())+
+  scale_x_continuous(breaks = seq(2009,2019,1))
+```
+
