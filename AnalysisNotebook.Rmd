@@ -5,8 +5,10 @@ output: html_notebook
 
 ```{r,warning=FALSE}
 library(tidyverse)
-library(viridis)
+library(scales)
 database <- read_csv("database.csv")
+NRS <- c('Oil','NG','CO','U')
+RS <- c('HE','WC','SC','Others')
 summary(database)
 ```
 
@@ -65,35 +67,6 @@ database %>%
 ```
 
 ```{r}
-# Colored
-database %>%
-  select(Year,'1_Oil','1_NG','1_CO','1_U','1_HE','1_WC','1_SC','1_Others') %>%
-  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
-  mutate(Source = str_sub(Source,3)) %>%
-  ggplot(aes(x = Year))+
-  geom_area(aes(y = Investment, fill = Source), col = "white", alpha=0.6)+
-  scale_fill_viridis(discrete = T)+
-  ggtitle("Brazilian Energy Investment", subtitle = "1 year perspective")+
-  ylab("Investment (perc)")+
-  theme_minimal()+
-  theme(panel.grid.minor.x = element_blank())+
-  scale_x_continuous(breaks = seq(2009,2019,1))
-database %>%
-  select(Year,'1_Oil','1_NG','1_CO','1_U','1_HE','1_WC','1_SC','1_Others') %>%
-  pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
-  mutate(Source = str_sub(Source,3)) %>%
-  ggplot(aes(x = Year))+
-  geom_line(aes(y = Investment, group = Source, col = Source))+
-  scale_shape_manual(values=1:10)+
-  scale_color_viridis(discrete = T)+
-  ggtitle("Brazilian Energy Investment", subtitle = "1 year perspective")+
-  ylab("Investment (perc)")+
-  theme_minimal()+
-  theme(panel.grid.minor.x = element_blank())+
-  scale_x_continuous(breaks = seq(2009,2019,1))
-
-#BW
-
 database %>%
   select(Year,'1_Oil','1_NG','1_CO','1_U','1_HE','1_WC','1_SC','1_Others') %>%
   pivot_longer(!Year, names_to = "Source", values_to = "Investment") %>%
@@ -148,6 +121,7 @@ database %>%
 ```
 
 ```{r}
+# per source
 y1 <- database %>%
   select(Year,'1_Oil','1_NG','1_CO','1_U','1_HE','1_WC','1_SC','1_Others') %>%
   pivot_longer(!Year, names_to = "Source", values_to = "Investment")
@@ -160,16 +134,20 @@ relative <- y1
 relative$Investment <- y10$Investment-y1$Investment
 
 relative %>%
-  mutate(Source = str_sub(Source,3)) %>%
+  mutate(Source = str_sub(Source,3), IsRenewable = if_else(Source %in% NRS, "NRS", "RS")) %>%
   ggplot(aes(x = Year))+
-  geom_line(aes(y = Investment, group = Source, col = Source), size = 1)+
+  geom_line(aes(y = Investment, group = Source), size = 0.5)+
+  geom_point(aes(y = Investment, group = Source, shape = Source))+
   geom_hline(yintercept = 0)+
   scale_shape_manual(values=1:10)+
   ggtitle("Brazilian Energy Investment", subtitle = "changes in 10 years")+
   ylab("Investment (perc)")+
   theme_minimal()+
   theme(panel.grid.minor.x = element_blank())+
-  scale_x_continuous(breaks = seq(2009,2019,1))
+  scale_x_continuous(breaks = seq(2009,2019,1))+
+  facet_grid(rows = vars(IsRenewable))
+
+#Renewable and non-renewable grouping
 
 y1 <- database %>%
   select(Year,'1_RS','1_NRS') %>%
@@ -185,7 +163,8 @@ relativeGeneral$Investment <- y10$Investment-y1$Investment
 relativeGeneral %>%
   mutate(Source = str_sub(Source,3)) %>%
   ggplot(aes(x = Year))+
-  geom_line(aes(y = Investment, group = Source, col = Source), size = 1)+
+  geom_line(aes(y = Investment, group = Source), size = 0.5)+
+  geom_point(aes(y = Investment, group = Source, shape = Source))+
   geom_hline(yintercept = 0)+
   scale_shape_manual(values=1:10)+
   ggtitle("Brazilian Energy Investment", subtitle = "changes in 10 years")+
@@ -225,5 +204,35 @@ database %>%
   theme_minimal()+
   theme(panel.grid.minor.x = element_blank())+
   scale_x_continuous(breaks = seq(2009,2019,1))
+```
+
+```{r}
+y1 <- database %>%
+  select(Year,'1_Oil','1_NG','1_CO','1_U','1_HE','1_WC','1_SC','1_Others') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment")
+
+y10 <- database %>%
+  select(Year,'10_Oil','10_NG','10_CO','10_U','10_HE','10_WC','10_SC','10_Others') %>%
+  pivot_longer(!Year, names_to = "Source", values_to = "Investment")
+
+relative <- y1
+relative$'Current Investment (perc)' <- relative$Investment
+relative$Investment <- y10$Investment-y1$Investment
+
+relative %>%
+  mutate(Source = str_sub(Source,3), IsRenewable = if_else(Source %in% NRS, "NRS", "RS")) %>%
+  ggplot(aes(x = Year))+
+  geom_line(aes(y = Investment, group = Source, col = Source), size = 0.5)+
+  geom_point(aes(y = Investment, group = Source, size = `Current Investment (perc)`, col = Source), alpha = 0.6)+
+  geom_hline(yintercept = 0)+
+  scale_shape_manual(values=1:10)+
+  ggtitle("Brazilian Energy Investment", subtitle = "planned changes in 10 years")+
+  ylab("Planned Investment changes (perc)")+
+  theme_minimal()+
+  theme(panel.grid.minor.x = element_blank())+
+  scale_x_continuous(breaks = seq(2009,2019,1))+
+  scale_y_continuous(breaks = seq(-7,7,2.5))+
+  ylim(c(-7,7))+
+  facet_grid(rows = vars(IsRenewable))
 ```
 
